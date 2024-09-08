@@ -10,3 +10,6 @@ webdataset
 einops
 pandas
 opencv-python
+granian 
+fastapi 
+pydantic_settings
