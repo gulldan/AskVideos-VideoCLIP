@@ -1,6 +1,6 @@
 lint.select = ["ALL"]
 
-lint.ignore = ["ANN001","ANN101","ANN201", "D100", "D101","D102", "D103", "D107","TRY201", "COM812", "ISC001", "PTH"]
+lint.ignore = ["ANN001","ANN101","ANN201", "D100", "D101","D102", "D103", "D107","TRY201", "COM812", "ISC001", "PTH", "ERA001"]
 
 line-length = 130
 

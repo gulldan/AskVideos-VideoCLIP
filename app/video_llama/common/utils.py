@@ -1,7 +1,7 @@
 """Copyright (c) 2022, salesforce.com, inc.
 All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
-For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause.
 """
 
 import io
@@ -74,16 +74,14 @@ def makedir(dir_path):
 
 def get_redirected_url(url: str):
     """Given a URL, returns the URL it redirects to or the
-    original URL in case of no indirection
+    original URL in case of no indirection.
     """
     import requests
 
-    with requests.Session() as session:
-        with session.get(url, stream=True, allow_redirects=True) as response:
-            if response.history:
-                return response.url
-            else:
-                return url
+    with requests.Session() as session, session.get(url, stream=True, allow_redirects=True) as response:
+        if response.history:
+            return response.url
+        return url
 
 
 def to_google_drive_download_url(view_url: str) -> str:
@@ -92,7 +90,7 @@ def to_google_drive_download_url(view_url: str) -> str:
     Example input:
         https://drive.google.com/file/d/137RyRjvTBkBiIfeYBNZBtViDHQ6_Ewsp/view
     Example output:
-        https://drive.google.com/uc?export=download&id=137RyRjvTBkBiIfeYBNZBtViDHQ6_Ewsp
+        https://drive.google.com/uc?export=download&id=137RyRjvTBkBiIfeYBNZBtViDHQ6_Ewsp.
     """
     splits = view_url.split("/")
     assert splits[-1] == "view"
@@ -104,7 +102,7 @@ def download_google_drive_url(url: str, output_path: str, output_file_name: str)
     """Download a file from google drive
     Downloading an URL from google drive requires confirmation when
     the file of the size is too big (google drive notifies that
-    anti-viral checks cannot be performed on such files)
+    anti-viral checks cannot be performed on such files).
     """
     import requests
 
@@ -203,6 +201,7 @@ def download_url(
     # check integrity of downloaded file
     if not check_integrity(fpath, md5):
         raise RuntimeError("File not found or corrupted.")
+    return None
 
 
 def download_and_extract_archive(
@@ -288,7 +287,8 @@ def save_file(data, filename, append_to_json=True, verbose=True):
             fopen.write(dump)
             fopen.flush()
     else:
-        raise Exception(f"Saving {file_ext} is not supported yet")
+        msg = f"Saving {file_ext} is not supported yet"
+        raise Exception(msg)
 
     if verbose:
         logging.info(f"Saved data to file: {filename}")
@@ -348,19 +348,19 @@ def load_file(filename, mmap_mode=None, verbose=True, allow_pickle=False):
         with g_pathmgr.open(filename, "r") as fopen:
             data = pd.read_csv(fopen)
     else:
-        raise Exception(f"Reading from {file_ext} is not supported yet")
+        msg = f"Reading from {file_ext} is not supported yet"
+        raise Exception(msg)
     return data
 
 
 def abspath(resource_path: str):
     """Make a path absolute, but take into account prefixes like
-    "http://" or "manifold://"
+    "http://" or "manifold://".
     """
     regex = re.compile(r"^\w+://")
     if regex.match(resource_path) is None:
         return os.path.abspath(resource_path)
-    else:
-        return resource_path
+    return resource_path
 
 
 def makedir(dir_path):
@@ -376,7 +376,7 @@ def makedir(dir_path):
 
 
 def is_url(input_url):
-    """Check if an input string is a url. look for http(s):// and ignoring the case"""
+    """Check if an input string is a url. look for http(s):// and ignoring the case."""
     is_url = re.match(r"^(?:http)s?://", input_url, re.IGNORECASE) is not None
     return is_url
 
@@ -392,6 +392,6 @@ def cleanup_dir(dir):
 
 
 def get_file_size(filename):
-    """Given a file, get the size of file in MB"""
+    """Given a file, get the size of file in MB."""
     size_in_mb = os.path.getsize(filename) / float(1024**2)
     return size_in_mb

@@ -1,26 +1,24 @@
 import logging
-import random
 
+# from transformers.models.bert.modeling_bert import BertEncoder
+import einops
 import torch
+from torch import nn
 from torch.cuda.amp import autocast as autocast
-import torch.nn as nn
+
+# from video_llama.models.Qformer import BertEncoder
+from transformers import BertConfig
 
 from video_llama.common.registry import registry
 from video_llama.models.blip2 import Blip2Base, disabled_train
-# from video_llama.models.Qformer import BertEncoder
-from transformers import LlamaTokenizer, BertConfig
-# from transformers.models.bert.modeling_bert import BertEncoder
-import einops
 from video_llama.models.Qformer import BertConfig, BertLMHeadModel
-import numpy as np
 
 DEVICE="cuda"#"mps"
 
 # from flamingo_pytorch import PerceiverResampler
 @registry.register_model("video_llama")
 class VideoLLAMA(Blip2Base):
-    """
-    BLIP2 GPT-LLAMA model.
+    """BLIP2 GPT-LLAMA model.
     """
 
     PRETRAINED_MODEL_CONFIG_DICT = {
@@ -62,7 +60,7 @@ class VideoLLAMA(Blip2Base):
 
         self.tokenizer = self.init_tokenizer()
 
-        print('Loading VIT')
+        print("Loading VIT")
         self.visual_encoder, self.ln_vision = self.init_vision_encoder(
             vit_model, img_size, drop_path_rate, False, vit_precision
         )
@@ -74,9 +72,9 @@ class VideoLLAMA(Blip2Base):
             param.requires_grad = False
         self.ln_vision = self.ln_vision.eval()
         self.ln_vision.train = disabled_train
-        print('Loading VIT Done')
+        print("Loading VIT Done")
 
-        print('Loading Q-Former')
+        print("Loading Q-Former")
         self.Qformer, self.query_tokens = self.init_Qformer(
             num_query_token, self.visual_encoder.num_features
         )
@@ -93,7 +91,7 @@ class VideoLLAMA(Blip2Base):
         self.Qformer = self.Qformer.eval()
         self.Qformer.train = disabled_train
         self.query_tokens.requires_grad = False
-        logging.info('Loading Q-Former Done')
+        logging.info("Loading Q-Former Done")
 
         self.video_frame_position_embedding = nn.Embedding(max_frame_pos, self.Qformer.config.hidden_size)
 
@@ -108,7 +106,7 @@ class VideoLLAMA(Blip2Base):
         for name, param in self.video_frame_position_embedding.named_parameters():
             param.requires_grad = False
         self.video_query_tokens.requires_grad = False
-        
+
         self.clip_dim_size = clip_dim_size
         embed_dim = self.clip_dim_size
         init_logit_scale = 0.07#np.log(1 / 0.07)
@@ -130,13 +128,13 @@ class VideoLLAMA(Blip2Base):
 
     def encode_videoQformer_visual(self, image, output_for_itm=False, output_for_itg=False):
         device = image.device
-        
+
         # input shape b,c,t,h,w
         batch_size,_,time_length,_,_ = image.size()
-        image = einops.rearrange(image, 'b c t h w -> (b t) c h w')
+        image = einops.rearrange(image, "b c t h w -> (b t) c h w")
         with self.maybe_autocast():
             # embed image features with blip2, out: (b t) q h
-            if DEVICE != 'cuda':
+            if DEVICE != "cuda":
                 self.vit_to_cpu()
             image_embeds = self.ln_vision(self.visual_encoder(image)).to(device)
             image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(device)
@@ -156,11 +154,11 @@ class VideoLLAMA(Blip2Base):
             q_hidden_state = query_output.last_hidden_state
 
             frame_position_embeddings = frame_position_embeddings.unsqueeze(-2)
-            frame_hidden_state = einops.rearrange(q_hidden_state, '(b t) q h -> b t q h',b=batch_size,t=time_length)
+            frame_hidden_state = einops.rearrange(q_hidden_state, "(b t) q h -> b t q h",b=batch_size,t=time_length)
             frame_hidden_state = frame_position_embeddings + frame_hidden_state
 
             # frame attention
-            frame_hidden_state =  einops.rearrange(frame_hidden_state, 'b t q h -> b (t q) h',b=batch_size,t=time_length)
+            frame_hidden_state =  einops.rearrange(frame_hidden_state, "b t q h -> b (t q) h",b=batch_size,t=time_length)
             frame_atts = torch.ones(frame_hidden_state.size()[:-1], dtype=torch.long).to(device)
             video_query_tokens = self.video_query_tokens.expand(frame_hidden_state.shape[0], -1, -1)
 
@@ -178,7 +176,7 @@ class VideoLLAMA(Blip2Base):
             if output_for_itg:
                 return video_query_tokens, video_query_output.past_key_values, frame_atts
             return video_query_tokens, video_query_output
-    
+
     def forward(self, samples):
         pass
 
@@ -191,7 +189,7 @@ class VideoLLAMA(Blip2Base):
 
         drop_path_rate = cfg.get("drop_path_rate", 0)
         vit_precision = cfg.get("vit_precision", "fp16")
-        
+
         max_frame_pos = cfg.get("max_frame_pos", 32)
         num_video_query_token =  cfg.get("num_video_query_token", 32)
 
@@ -213,12 +211,12 @@ class VideoLLAMA(Blip2Base):
 
         ckpt_path = cfg.get("ckpt", "")  # load weights of MiniGPT-4
         if ckpt_path:
-            print("Load first Checkpoint: {}".format(ckpt_path))
+            print(f"Load first Checkpoint: {ckpt_path}")
             ckpt = torch.load(ckpt_path, map_location="cpu")
-            msg = model.load_state_dict(ckpt['model'], strict=False)
-        ckpt_path_2 = cfg.get("ckpt_2", "")  
+            msg = model.load_state_dict(ckpt["model"], strict=False)
+        ckpt_path_2 = cfg.get("ckpt_2", "")
         if ckpt_path_2:
-            print("Load second Checkpoint: {}".format(ckpt_path_2))
+            print(f"Load second Checkpoint: {ckpt_path_2}")
             ckpt = torch.load(ckpt_path_2, map_location="cpu")
-            msg = model.load_state_dict(ckpt['model'], strict=False)
+            msg = model.load_state_dict(ckpt["model"], strict=False)
         return model

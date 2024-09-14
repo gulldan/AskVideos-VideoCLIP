@@ -1,5 +1,5 @@
 """Conversation prompt template of Video-LLaMA.
-Adapted from: https://github.com/Vision-CAIR/MiniGPT-4/blob/main/minigpt4/conversation/conversation.py
+Adapted from: https://github.com/Vision-CAIR/MiniGPT-4/blob/main/minigpt4/conversation/conversation.py.
 """
 
 import dataclasses
@@ -49,7 +49,7 @@ class Conversation:
                 else:
                     ret += role + ":"
             return ret
-        elif self.sep_style == SeparatorStyle.TWO:
+        if self.sep_style == SeparatorStyle.TWO:
             seps = [self.sep, self.sep2]
             ret = self.system + seps[0]
             for i, (role, message) in enumerate(self.messages):
@@ -58,9 +58,11 @@ class Conversation:
                 else:
                     ret += role + ":"
             return ret
-        elif self.sep_style == SeparatorStyle.LLAMA_2:
-            wrap_sys = lambda msg: f"<<SYS>>\n{msg}\n<</SYS>>\n\n"
-            wrap_inst = lambda msg: f"[INST] {msg} [/INST]"
+        if self.sep_style == SeparatorStyle.LLAMA_2:
+            def wrap_sys(msg) -> str:
+                return f"<<SYS>>\n{msg}\n<</SYS>>\n\n"
+            def wrap_inst(msg) -> str:
+                return f"[INST] {msg} [/INST]"
             ret = ""
 
             for i, (role, message) in enumerate(self.messages):
@@ -81,15 +83,15 @@ class Conversation:
                     ret += ""
             ret = ret.lstrip(self.sep)
             return ret
-        else:
-            raise ValueError(f"Invalid style: {self.sep_style}")
+        msg = f"Invalid style: {self.sep_style}"
+        raise ValueError(msg)
 
     def append_message(self, role, message):
         self.messages.append([role, message])
 
     def to_gradio_chatbot(self):
         ret = []
-        for i, (role, msg) in enumerate(self.messages[self.offset :]):
+        for i, (_role, msg) in enumerate(self.messages[self.offset :]):
             if i % 2 == 0:
                 ret.append([msg, None])
             else:
@@ -123,16 +125,14 @@ class Conversation:
 
 
 class StoppingCriteriaSub(StoppingCriteria):
-    def __init__(self, stops=[], encounters=1):
+    def __init__(self, stops=None, encounters=1) -> None:
+        if stops is None:
+            stops = []
         super().__init__()
         self.stops = stops
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor):
-        for stop in self.stops:
-            if torch.all(stop == input_ids[0][-len(stop) :]).item():
-                return True
-
-        return False
+        return any(torch.all(stop == input_ids[0][-len(stop):]).item() for stop in self.stops)
 
 
 CONV_VISION = Conversation(
@@ -167,7 +167,7 @@ conv_llava_llama_2 = Conversation(
 
 
 class Chat:
-    def __init__(self, model, vis_processor, device="cuda:0"):
+    def __init__(self, model, vis_processor, device="cuda:0") -> None:
         self.device = device
         self.model = model
         self.vis_processor = vis_processor
@@ -252,7 +252,7 @@ class Chat:
     def upload_video_without_audio_preproc_frames(self, video_path, conv, img_list):
         msg = ""
         if isinstance(video_path, str):  # is a video path
-            ext = os.path.splitext(video_path)[-1].lower()
+            os.path.splitext(video_path)[-1].lower()
             print(video_path)
             # image = self.vis_processor(image).unsqueeze(0).to(self.device)
             video, msg = load_video_all_frames(video_path=video_path, frame_sep=4, height=224, width=224, return_msg=True)
@@ -271,7 +271,7 @@ class Chat:
     def upload_video(self, video_path, conv, img_list):
         msg = ""
         if isinstance(video_path, str):  # is a video path
-            ext = os.path.splitext(video_path)[-1].lower()
+            os.path.splitext(video_path)[-1].lower()
             print(video_path)
             # image = self.vis_processor(image).unsqueeze(0).to(self.device)
             video, msg = load_video(video_path=video_path, n_frms=8, height=224, width=224, sampling="uniform", return_msg=True)
@@ -314,7 +314,7 @@ class Chat:
     def upload_video_without_audio(self, video_path, conv, img_list):
         msg = ""
         if isinstance(video_path, str):  # is a video path
-            ext = os.path.splitext(video_path)[-1].lower()
+            os.path.splitext(video_path)[-1].lower()
             print(video_path)
             # image = self.vis_processor(image).unsqueeze(0).to(self.device)
             video, msg = load_video(video_path=video_path, n_frms=32, height=224, width=224, sampling="uniform", return_msg=True)

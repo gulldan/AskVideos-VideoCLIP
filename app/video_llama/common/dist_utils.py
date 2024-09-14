@@ -1,7 +1,7 @@
 """Copyright (c) 2022, salesforce.com, inc.
 All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
-For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause.
 """
 
 import datetime
@@ -14,7 +14,7 @@ import torch.distributed as dist
 
 
 def setup_for_distributed(is_master):
-    """This function disables printing when not in master process"""
+    """This function disables printing when not in master process."""
     import builtins as __builtin__
 
     builtin_print = __builtin__.print
@@ -30,9 +30,7 @@ def setup_for_distributed(is_master):
 def is_dist_avail_and_initialized():
     if not dist.is_available():
         return False
-    if not dist.is_initialized():
-        return False
-    return True
+    return dist.is_initialized()
 
 
 def get_world_size():
@@ -100,6 +98,7 @@ def main_process(func):
         rank, _ = get_dist_info()
         if rank == 0:
             return func(*args, **kwargs)
+        return None
 
     return wrapper
 

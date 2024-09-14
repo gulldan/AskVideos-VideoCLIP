@@ -449,8 +449,7 @@ class RunnerBase:
     def unwrap_dist_model(self, model):
         if self.use_distributed:
             return model.module
-        else:
-            return model
+        return model
 
     def create_loaders(
         self,

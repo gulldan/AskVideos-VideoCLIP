@@ -1,7 +1,7 @@
 """Copyright (c) 2022, salesforce.com, inc.
 All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
-For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause.
 """
 
 import logging
@@ -60,12 +60,11 @@ def apply_to_sample(f, sample):
     def _apply(x):
         if torch.is_tensor(x):
             return f(x)
-        elif isinstance(x, dict):
+        if isinstance(x, dict):
             return {key: _apply(value) for key, value in x.items()}
-        elif isinstance(x, list):
+        if isinstance(x, list):
             return [_apply(x) for x in x]
-        else:
-            return x
+        return x
 
     return _apply(sample)
 
@@ -98,10 +97,10 @@ def reorg_datasets_by_split(datasets):
     # if len(datasets) == 1:
     #     return datasets[list(datasets.keys())[0]]
     # else:
-    reorg_datasets = dict()
+    reorg_datasets = {}
 
     # reorganize by split
-    for _, dataset in datasets.items():
+    for dataset in datasets.values():
         for split_name, dataset_split in dataset.items():
             if split_name not in reorg_datasets:
                 reorg_datasets[split_name] = [dataset_split]

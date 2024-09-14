@@ -1,7 +1,7 @@
 """Copyright (c) 2022, salesforce.com, inc.
 All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
-For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause.
 """
 
 import json
@@ -13,7 +13,7 @@ from video_llama.common.registry import registry
 
 
 class Config:
-    def __init__(self, args):
+    def __init__(self, args) -> None:
         self.config = {}
 
         self.args = args
@@ -37,7 +37,7 @@ class Config:
         # Override the default configuration with user options.
         self.config = OmegaConf.merge(runner_config, model_config, dataset_config, user_config)
 
-    def _validate_runner_config(self, runner_config):
+    def _validate_runner_config(self, runner_config) -> None:
         """This method validates the configuration, such that
         1) all the user specified options are valid;
         2) no type mismatches between the user specified options and the config.
@@ -176,14 +176,14 @@ class ConfigValidator:
     """
 
     class _Argument:
-        def __init__(self, name, choices=None, type=None, help=None):
+        def __init__(self, name, choices=None, type=None, help=None) -> None:
             self.name = name
             self.val = None
             self.choices = choices
             self.type = type
             self.help = help
 
-        def __str__(self):
+        def __str__(self) -> str:
             s = f"{self.name}={self.val}"
             if self.type is not None:
                 s += f", ({self.type})"
@@ -193,10 +193,10 @@ class ConfigValidator:
                 s += f", ({self.help})"
             return s
 
-    def __init__(self, description):
+    def __init__(self, description) -> None:
         self.description = description
 
-        self.arguments = dict()
+        self.arguments = {}
 
         self.parsed_args = None
 
@@ -221,7 +221,8 @@ class ConfigValidator:
                 try:
                     self.arguments[k].val = self.arguments[k].type(v)
                 except ValueError:
-                    raise ValueError(f"{k} is not a valid {self.arguments[k].type}.")
+                    msg = f"{k} is not a valid {self.arguments[k].type}."
+                    raise ValueError(msg)
 
             if self.arguments[k].choices is not None:
                 assert v in self.arguments[k].choices, f"""{k} must be one of {self.arguments[k].choices}."""

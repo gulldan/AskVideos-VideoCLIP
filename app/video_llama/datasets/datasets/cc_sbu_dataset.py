@@ -8,7 +8,7 @@ from video_llama.datasets.datasets.caption_datasets import CaptionDataset
 
 
 class CCSBUDataset(BaseDataset):
-    def __init__(self, vis_processor, text_processor, location):
+    def __init__(self, vis_processor, text_processor, location) -> None:
         super().__init__(vis_processor=vis_processor, text_processor=text_processor)
 
         self.inner_dataset = wds.DataPipeline(

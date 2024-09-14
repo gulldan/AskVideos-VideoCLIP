@@ -103,10 +103,10 @@ class AskYoutubeDataset(BaseDataset):
                 print(f"Failed to load examples with video: {video_path}. " f"Will randomly sample an example as a replacement.")
                 index = random.randint(0, len(self) - 1)
                 continue
-            else:
-                break
+            break
         else:
-            raise RuntimeError(f"Failed to fetch video after {num_retries} retries.")
+            msg = f"Failed to fetch video after {num_retries} retries."
+            raise RuntimeError(msg)
         # "image_id" is kept to stay compatible with the COCO evaluation format
         return {
             "image": video,
@@ -155,7 +155,7 @@ class AskYoutubeInstructDataset(BaseDataset):
             for i, chunk in enumerate(captions):
                 transcript = chunk["transcript"]
                 qa = chunk["qa"]
-                # TODO: Make separate questions and add all.
+                # TODO: Make separate questions and add all.  # noqa: FIX002
                 m = {"video_id": video_id, "seq_num": i, "transcript": transcript, "qa": qa}
                 joined_captions.append(pd.DataFrame.from_dict([m]))
         # for video_id in os.listdir(ann_root):
@@ -282,10 +282,10 @@ class AskYoutubeInstructDataset(BaseDataset):
                 print(video.size(), self.vis_processor.n_frms)
                 index = random.randint(0, len(self) - 1)
                 continue
-            else:
-                break
+            break
         else:
-            raise RuntimeError(f"Failed to fetch video after {num_retries} retries.")
+            msg = f"Failed to fetch video after {num_retries} retries."
+            raise RuntimeError(msg)
         # "image_id" is kept to stay compatible with the COCO evaluation format
         # print(data_dict["texts"])
         return {
@@ -399,7 +399,7 @@ def _tokenize_fn(strings: Sequence[str], tokenizer: transformers.PreTrainedToken
     }
 
 
-def _mask_targets(target, tokenized_lens, speakers):
+def _mask_targets(target, tokenized_lens, speakers) -> None:
     # cur_idx = 0
     cur_idx = tokenized_lens[0]
     tokenized_lens = tokenized_lens[1:]
@@ -450,7 +450,7 @@ def preprocess_multimodal(conversation_list: Sequence[str], multimodal_cfg: dict
 
 
 class WebvidDatasetEvalDataset(BaseDataset):
-    def __init__(self, vis_processor, text_processor, vis_root, ann_paths):
+    def __init__(self, vis_processor, text_processor, vis_root, ann_paths) -> None:
         """vis_root (string): Root directory of images (e.g. coco/images/)
         ann_root (string): directory to store the annotation file
         split (string): val or test.

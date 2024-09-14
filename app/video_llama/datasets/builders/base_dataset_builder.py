@@ -2,7 +2,7 @@
 Copyright (c) 2022, salesforce.com, inc.
 All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
-For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause.
 """
 
 import logging
@@ -23,7 +23,7 @@ from video_llama.processors.base_processor import BaseProcessor
 class BaseDatasetBuilder:
     train_dataset_cls, eval_dataset_cls = None, None
 
-    def __init__(self, cfg=None):
+    def __init__(self, cfg=None) -> None:
         super().__init__()
 
         if cfg is None:
@@ -82,11 +82,11 @@ class BaseDatasetBuilder:
     def default_config_path(cls, type="default"):
         return utils.get_abs_path(cls.DATASET_CONFIG_DICT[type])
 
-    def _download_data(self):
+    def _download_data(self) -> None:
         self._download_ann()
         self._download_vis()
 
-    def _download_ann(self):
+    def _download_ann(self) -> None:
         """Download annotation files if necessary.
         All the vision-language datasets should have annotations of unified format.
 
@@ -132,13 +132,13 @@ class BaseDatasetBuilder:
                 else:
                     if os.path.isdir(storage_path):
                         # if only dirname is provided, suffix with basename of URL.
-                        raise ValueError(f"Expecting storage_path to be a file path, got directory {storage_path}")
-                    else:
-                        filename = os.path.basename(storage_path)
+                        msg = f"Expecting storage_path to be a file path, got directory {storage_path}"
+                        raise ValueError(msg)
+                    filename = os.path.basename(storage_path)
 
                     download_url(url=url_or_filename, root=dirname, filename=filename)
 
-    def _download_vis(self):
+    def _download_vis(self) -> None:
         storage_path = self.config.build_info.get(self.data_type).storage
         storage_path = utils.get_cache_path(storage_path)
 
@@ -163,8 +163,8 @@ class BaseDatasetBuilder:
         ann_info = build_info.annotations
         vis_info = build_info.get(self.data_type)
 
-        datasets = dict()
-        for split in ann_info.keys():
+        datasets = {}
+        for split in ann_info:
             if split not in ["train", "val", "test"]:
                 continue
 
@@ -210,6 +210,6 @@ class BaseDatasetBuilder:
 
 def load_dataset_config(cfg_path):
     cfg = OmegaConf.load(cfg_path).datasets
-    cfg = cfg[list(cfg.keys())[0]]
+    cfg = cfg[next(iter(cfg.keys()))]
 
     return cfg

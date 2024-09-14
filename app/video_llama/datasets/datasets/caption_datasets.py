@@ -1,7 +1,7 @@
 """Copyright (c) 2022, salesforce.com, inc.
 All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
-For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause.
 """
 
 import os
@@ -26,9 +26,9 @@ class __DisplMixin:
 
 
 class CaptionDataset(BaseDataset, __DisplMixin):
-    def __init__(self, vis_processor, text_processor, vis_root, ann_paths):
+    def __init__(self, vis_processor, text_processor, vis_root, ann_paths) -> None:
         """vis_root (string): Root directory of images (e.g. coco/images/)
-        ann_root (string): directory to store the annotation file
+        ann_root (string): directory to store the annotation file.
         """
         super().__init__(vis_processor, text_processor, vis_root, ann_paths)
 
@@ -36,7 +36,7 @@ class CaptionDataset(BaseDataset, __DisplMixin):
         n = 0
         for ann in self.annotation:
             img_id = ann["image_id"]
-            if img_id not in self.img_ids.keys():
+            if img_id not in self.img_ids:
                 self.img_ids[img_id] = n
                 n += 1
 
@@ -59,10 +59,10 @@ class CaptionDataset(BaseDataset, __DisplMixin):
 
 
 class CaptionEvalDataset(BaseDataset, __DisplMixin):
-    def __init__(self, vis_processor, text_processor, vis_root, ann_paths):
+    def __init__(self, vis_processor, text_processor, vis_root, ann_paths) -> None:
         """vis_root (string): Root directory of images (e.g. coco/images/)
         ann_root (string): directory to store the annotation file
-        split (string): val or test
+        split (string): val or test.
         """
         super().__init__(vis_processor, text_processor, vis_root, ann_paths)
 

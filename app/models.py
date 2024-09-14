@@ -1,6 +1,7 @@
 from argparse import Namespace
 
 from config import settings
+
 from video_llama.common.config import Config
 from video_llama.common.registry import registry
 from video_llama.processors import Blip2ImageEvalProcessor

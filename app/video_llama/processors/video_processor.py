@@ -70,7 +70,7 @@ def split_clip(vlen, frame_rate, clip_len, n_frms):
         frames_in_clip = range(start_frame, end_frame)
         if len(frames_in_clip) == 0:
             continue
-        elif len(frames_in_clip) < n_frms:
+        if len(frames_in_clip) < n_frms:
             all_clips.append(frames_in_clip)
         else:
             # Sample n_frms.

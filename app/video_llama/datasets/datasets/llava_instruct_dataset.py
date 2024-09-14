@@ -50,10 +50,10 @@ class Instruct_Dataset(BaseDataset):
         tokenizer_name="/mnt/workspace/ckpt/vicuna-13b/",
         data_type="image",
         model_type="vicuna",
-    ):
+    ) -> None:
         """vis_root (string): Root directory of Llava images (e.g. webvid_eval/video/)
         ann_root (string): Root directory of video (e.g. webvid_eval/annotations/)
-        split (string): val or test
+        split (string): val or test.
         """
         super().__init__(vis_processor=vis_processor, text_processor=text_processor)
 
@@ -109,7 +109,8 @@ class Instruct_Dataset(BaseDataset):
                 continue
             break
         else:
-            raise RuntimeError(f"Failed to fetch image after {num_retries} retries.")
+            msg = f"Failed to fetch image after {num_retries} retries."
+            raise RuntimeError(msg)
         # "image_id" is kept to stay compatible with the COCO evaluation format
         return {
             "image": image,
@@ -243,7 +244,6 @@ def preprocess_for_llama_v2(
     roles = {"human": conv.roles[0], "gpt": conv.roles[1]}
     for source in sources:
         # <s>[INST] <<SYS>>\n{system_prompt}\n<</SYS>>\n\n
-        header = f"<s>[INST] <<SYS>>\n{conv.system}\n</SYS>>\n\n"
 
         if roles[source[0]["from"]] != conv.roles[0]:
             # Skip the first one if it is not from human
@@ -270,7 +270,7 @@ def preprocess_for_llama_v2(
         rounds = conversation.split(conv.sep2)
         cur_len = 1
         target[:cur_len] = IGNORE_INDEX
-        for i, rou in enumerate(rounds):
+        for _i, rou in enumerate(rounds):
             if rou == "":
                 break
 
@@ -290,7 +290,7 @@ def preprocess_for_llama_v2(
     return {"input_ids": input_ids, "labels": targets}
 
 
-def _mask_targets(target, tokenized_lens, speakers):
+def _mask_targets(target, tokenized_lens, speakers) -> None:
     # cur_idx = 0
     cur_idx = tokenized_lens[0]
     tokenized_lens = tokenized_lens[1:]

@@ -7,6 +7,7 @@ from argparse import Namespace
 import torch
 import yappi
 from torch.nn import functional as F
+
 from video_llama.common.config import Config
 from video_llama.common.registry import registry
 from video_llama.processors import Blip2ImageEvalProcessor

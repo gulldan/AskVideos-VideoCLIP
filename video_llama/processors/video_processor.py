@@ -1,29 +1,29 @@
-"""
- Copyright (c) 2022, salesforce.com, inc.
- All rights reserved.
- SPDX-License-Identifier: BSD-3-Clause
- For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+"""Copyright (c) 2022, salesforce.com, inc.
+All rights reserved.
+SPDX-License-Identifier: BSD-3-Clause
+For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 """
 
-import torch
-from video_llama.common.registry import registry
-from decord import VideoReader
+import math
+import random as rnd
+
 import decord
 import numpy as np
-from video_llama.processors import transforms_video
-from video_llama.processors.base_processor import BaseProcessor
-from video_llama.processors.randaugment import VideoRandomAugment
-from video_llama.processors import functional_video as F
+import torch
+from decord import VideoReader
 from omegaconf import OmegaConf
 from torchvision import transforms
-import random as rnd
-import math
 
+from video_llama.common.registry import registry
+from video_llama.processors import functional_video as F
+from video_llama.processors import transforms_video
+from video_llama.processors.base_processor import BaseProcessor
 
 MAX_INT = registry.get("MAX_INT")
 decord.bridge.set_bridge("torch")
 
-def load_video(video_path, n_frms=MAX_INT, height=-1, width=-1, shortest_side=None, sampling="uniform", return_msg = False):
+
+def load_video(video_path, n_frms=MAX_INT, height=-1, width=-1, shortest_side=None, sampling="uniform", return_msg=False):
     decord.bridge.set_bridge("torch")
     if shortest_side is not None:
         vr = VideoReader(uri=video_path, width=shortest_side)
@@ -58,8 +58,9 @@ def load_video(video_path, n_frms=MAX_INT, height=-1, width=-1, shortest_side=No
     msg = f"The video contains {len(indices)} frames sampled at {sec} seconds. "
     return frms, msg
 
+
 def split_clip(vlen, frame_rate, clip_len, n_frms):
-    total_duration = vlen / frame_rate # Total duration in seconds
+    total_duration = vlen / frame_rate  # Total duration in seconds
     num_clips = math.ceil(total_duration / clip_len)
     frames_per_clip = int(math.ceil(frame_rate * clip_len))
 
@@ -70,7 +71,7 @@ def split_clip(vlen, frame_rate, clip_len, n_frms):
         frames_in_clip = range(start_frame, end_frame)
         if len(frames_in_clip) == 0:
             continue
-        elif len(frames_in_clip) < n_frms:
+        if len(frames_in_clip) < n_frms:
             all_clips.append(frames_in_clip)
         else:
             # Sample n_frms.
@@ -79,7 +80,17 @@ def split_clip(vlen, frame_rate, clip_len, n_frms):
     return all_clips
 
 
-def load_video_start_end(video_path, n_frms=np.iinfo(np.int32).max, height=-1, width=-1, shortest_side=None, start_seconds=-1, end_seconds=-1, sampling="uniform", return_msg=False):
+def load_video_start_end(
+    video_path,
+    n_frms=np.iinfo(np.int32).max,
+    height=-1,
+    width=-1,
+    shortest_side=None,
+    start_seconds=-1,
+    end_seconds=-1,
+    sampling="uniform",
+    return_msg=False,
+):
     decord.bridge.set_bridge("torch")
     if shortest_side is not None:
         vr = VideoReader(uri=video_path, width=shortest_side)
@@ -96,7 +107,7 @@ def load_video_start_end(video_path, n_frms=np.iinfo(np.int32).max, height=-1, w
     # Ensure start and end are within bounds
     start = max(0, start)
     end = min(vlen, end)
-    print(f'load_video_start_end: {start} {end}')
+    print(f"load_video_start_end: {start} {end}")
 
     # Adjust n_frms to be within the specified range
     n_frms = min(n_frms, end - start)
@@ -123,7 +134,10 @@ def load_video_start_end(video_path, n_frms=np.iinfo(np.int32).max, height=-1, w
     msg = f"The video contains {len(indices)} frames sampled at {sec} seconds. "
     return frms, msg
 
-def load_video_long(video_path, n_frms=MAX_INT, height=-1, width=-1, shortest_side=None, clip_len=10, sampling="uniform", return_msg = False):
+
+def load_video_long(
+    video_path, n_frms=MAX_INT, height=-1, width=-1, shortest_side=None, clip_len=10, sampling="uniform", return_msg=False
+):
     decord.bridge.set_bridge("torch")
     if shortest_side is not None:
         vr = VideoReader(uri=video_path, width=shortest_side)
@@ -147,7 +161,7 @@ def load_video_long(video_path, n_frms=MAX_INT, height=-1, width=-1, shortest_si
 
     if not return_msg:
         return all_frms
-    return all_frms, ''
+    return all_frms, ""
     fps = float(vr.get_avg_fps())
     sec = ", ".join([str(round(f / fps, 1)) for f in indices])
     # " " should be added in the start and end
@@ -155,7 +169,18 @@ def load_video_long(video_path, n_frms=MAX_INT, height=-1, width=-1, shortest_si
     return frms, msg
 
 
-def load_video_long_subset(video_path, subsets, n_frms=MAX_INT, height=-1, width=-1, shortest_side=None, clip_len=10, orig_clip_len=30, sampling="uniform", return_msg = False):
+def load_video_long_subset(
+    video_path,
+    subsets,
+    n_frms=MAX_INT,
+    height=-1,
+    width=-1,
+    shortest_side=None,
+    clip_len=10,
+    orig_clip_len=30,
+    sampling="uniform",
+    return_msg=False,
+):
     decord.bridge.set_bridge("torch")
     if shortest_side is not None:
         vr = VideoReader(uri=video_path, width=shortest_side)
@@ -168,12 +193,12 @@ def load_video_long_subset(video_path, subsets, n_frms=MAX_INT, height=-1, width
 
     # Just compute new_clip_len, then expand indices.
     all_clips_idxs = split_clip(vlen, frame_rate, clip_len, n_frms)
- 
+
     all_clips_idxs_subsets = []
-    for (start, end) in subsets:
+    for start, end in subsets:
         if start >= len(all_clips_idxs) or end >= len(all_clips_idxs):
-            print('Error: ', start, end, len(all_clips_idxs))
-        idxs_list = all_clips_idxs[start: end]
+            print("Error: ", start, end, len(all_clips_idxs))
+        idxs_list = all_clips_idxs[start:end]
         # Split idxs into clip_len.
         all_clips_idxs_subsets.extend(idxs_list)
 
@@ -189,9 +214,10 @@ def load_video_long_subset(video_path, subsets, n_frms=MAX_INT, height=-1, width
 
     if not return_msg:
         return all_frms
-    return all_frms, ''
+    return all_frms, ""
 
-def load_video_all_frames(video_path, frame_sep=4, height=-1, width=-1, return_msg = False):
+
+def load_video_all_frames(video_path, frame_sep=4, height=-1, width=-1, return_msg=False):
     decord.bridge.set_bridge("torch")
     vr = VideoReader(uri=video_path, height=height, width=width)
 
@@ -218,6 +244,7 @@ def load_video_all_frames(video_path, frame_sep=4, height=-1, width=-1, return_m
     msg = f"The video contains {len(indices)} frames sampled at {sec} seconds. "
     return frms, msg
 
+
 class AlproVideoBaseProcessor(BaseProcessor):
     def __init__(self, mean=None, std=None, n_frms=MAX_INT):
         if mean is None:
@@ -230,7 +257,7 @@ class AlproVideoBaseProcessor(BaseProcessor):
         self.n_frms = n_frms
 
 
-class ToUint8(object):
+class ToUint8:
     def __init__(self):
         pass
 
@@ -241,10 +268,10 @@ class ToUint8(object):
         return self.__class__.__name__
 
 
-class ToTHWC(object):
-    """
-    Args:
+class ToTHWC:
+    """Args:
         clip (torch.tensor, dtype=torch.uint8): Size is (C, T, H, W)
+
     Return:
         clip (torch.tensor, dtype=torch.float): Size is (T, H, W, C)
     """
@@ -259,15 +286,15 @@ class ToTHWC(object):
         return self.__class__.__name__
 
 
-class ResizeVideo(object):
+class ResizeVideo:
     def __init__(self, target_size, interpolation_mode="bilinear"):
         self.target_size = target_size
         self.interpolation_mode = interpolation_mode
 
     def __call__(self, clip):
-        """
-        Args:
+        """Args:
             clip (torch.tensor): Video clip to be cropped. Size is (C, T, H, W)
+
         Returns:
             torch.tensor: central cropping of video clip. Size is
             (C, T, crop_size, crop_size)
@@ -275,7 +302,7 @@ class ResizeVideo(object):
         return F.resize(clip, self.target_size, self.interpolation_mode)
 
     def __repr__(self):
-        return self.__class__.__name__ + "(resize_size={0})".format(self.target_size)
+        return self.__class__.__name__ + f"(resize_size={self.target_size})"
 
 
 @registry.register_processor("alpro_video_train")
@@ -309,9 +336,9 @@ class AlproVideoTrainProcessor(AlproVideoBaseProcessor):
         )
 
     def __call__(self, vpath):
-        """
-        Args:
+        """Args:
             clip (torch.tensor): Video clip to be cropped. Size is (C, T, H, W)
+
         Returns:
             torch.tensor: video clip after transforms. Size is (C, T, size, size).
         """
@@ -369,9 +396,9 @@ class AlproVideoEvalProcessor(AlproVideoBaseProcessor):
         )
 
     def __call__(self, vpath):
-        """
-        Args:
+        """Args:
             clip (torch.tensor): Video clip to be cropped. Size is (C, T, H, W)
+
         Returns:
             torch.tensor: video clip after transforms. Size is (C, T, size, size).
         """
@@ -415,9 +442,7 @@ class ResizeCenterCropVideoTrainProcessor(AlproVideoBaseProcessor):
         self.transform = transforms.Compose(
             [
                 # Video size is (C, T, H, W)
-                transforms_video.ResizedCenterCropVideo(
-                    (image_size, image_size)
-                ),
+                transforms_video.ResizedCenterCropVideo((image_size, image_size)),
                 ToTHWC(),  # C, T, H, W -> T, H, W, C
                 ToUint8(),
                 transforms_video.ToTensorVideo(),  # T, H, W, C -> C, T, H, W
@@ -426,9 +451,9 @@ class ResizeCenterCropVideoTrainProcessor(AlproVideoBaseProcessor):
         )
 
     def __call__(self, vpath):
-        """
-        Args:
+        """Args:
             clip (torch.tensor): Video clip to be cropped. Size is (C, T, H, W)
+
         Returns:
             torch.tensor: video clip after transforms. Size is (C, T, size, size).
         """
@@ -436,7 +461,7 @@ class ResizeCenterCropVideoTrainProcessor(AlproVideoBaseProcessor):
             video_path=vpath,
             n_frms=self.n_frms,
             shortest_side=self.image_size,
-            #sampling="headtail",
+            # sampling="headtail",
         )
 
         return self.transform(clip)

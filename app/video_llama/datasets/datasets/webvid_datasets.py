@@ -82,8 +82,7 @@ class WebvidDataset(BaseDataset):
                 print(f"Failed to load examples with video: {video_path}. " f"Will randomly sample an example as a replacement.")
                 index = random.randint(0, len(self) - 1)
                 continue
-            else:
-                break
+            break
         else:
             raise RuntimeError(f"Failed to fetch video after {num_retries} retries.")
         # "image_id" is kept to stay compatible with the COCO evaluation format

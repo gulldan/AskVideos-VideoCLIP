@@ -1,7 +1,7 @@
 """Copyright (c) 2022, salesforce.com, inc.
 All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
-For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause.
 """
 
 import random
@@ -21,7 +21,7 @@ class MultiIterLoader:
         ratios (List[float]): List of ratios to sample from each loader. If None, all loaders are sampled uniformly.
     """
 
-    def __init__(self, loaders, ratios=None):
+    def __init__(self, loaders, ratios=None) -> None:
         # assert all loaders has __next__ method
         for loader in loaders:
             assert hasattr(loader, "__next__"), f"Loader {loader} has no __next__ method."
@@ -48,7 +48,7 @@ class PrefetchLoader:
     (copied and then modified from nvidia apex)
     """
 
-    def __init__(self, loader):
+    def __init__(self, loader) -> None:
         self.loader = loader
         self.stream = torch.cuda.Stream()
 
@@ -67,7 +67,7 @@ class PrefetchLoader:
                 yield batch
             batch = self.next(loader_it)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.loader)
 
     def preload(self, it):
@@ -111,7 +111,7 @@ class PrefetchLoader:
 def record_cuda_stream(batch):
     if isinstance(batch, torch.Tensor):
         batch.record_stream(torch.cuda.current_stream())
-    elif isinstance(batch, list) or isinstance(batch, tuple):
+    elif isinstance(batch, list | tuple):
         for t in batch:
             record_cuda_stream(t)
     elif isinstance(batch, dict):
@@ -128,7 +128,7 @@ class IterLoader:
         https://github.com/open-mmlab/mmcv/blob/master/mmcv/runner/iter_based_runner.py
     """
 
-    def __init__(self, dataloader: DataLoader, use_distributed: bool = False):
+    def __init__(self, dataloader: DataLoader, use_distributed: bool = False) -> None:
         self._dataloader = dataloader
         self.iter_loader = iter(self._dataloader)
         self._use_distributed = use_distributed
@@ -154,5 +154,5 @@ class IterLoader:
     def __iter__(self):
         return self
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._dataloader)

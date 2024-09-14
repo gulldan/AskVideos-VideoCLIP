@@ -1,7 +1,7 @@
 """Copyright (c) 2022, salesforce.com, inc.
 All rights reserved.
 SPDX-License-Identifier: BSD-3-Clause
-For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause
+For full license text, see the LICENSE_Lavis file in the repo root or https://opensource.org/licenses/BSD-3-Clause.
 """
 
 import json
@@ -12,10 +12,12 @@ from torch.utils.data.dataloader import default_collate
 
 
 class BaseDataset(Dataset):
-    def __init__(self, vis_processor=None, text_processor=None, vis_root=None, ann_paths=[]):
+    def __init__(self, vis_processor=None, text_processor=None, vis_root=None, ann_paths=None) -> None:
         """vis_root (string): Root directory of images (e.g. coco/images/)
-        ann_root (string): directory to store the annotation file
+        ann_root (string): directory to store the annotation file.
         """
+        if ann_paths is None:
+            ann_paths = []
         self.vis_root = vis_root
 
         self.annotation = []
@@ -27,7 +29,7 @@ class BaseDataset(Dataset):
 
         self._add_instance_ids()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.annotation)
 
     def collater(self, samples):
@@ -37,7 +39,7 @@ class BaseDataset(Dataset):
         self.vis_processor = vis_processor
         self.text_processor = text_processor
 
-    def _add_instance_ids(self, key="instance_id"):
+    def _add_instance_ids(self, key="instance_id") -> None:
         for idx, ann in enumerate(self.annotation):
             ann[key] = str(idx)
 
@@ -59,6 +61,6 @@ class ConcatDataset(ConcatDataset):
 
         samples_shared_keys = []
         for s in samples:
-            samples_shared_keys.append({k: s[k] for k in s.keys() if k in shared_keys})
+            samples_shared_keys.append({k: s[k] for k in s if k in shared_keys})
 
         return self.datasets[0].collater(samples_shared_keys)
